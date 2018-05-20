@@ -1,12 +1,12 @@
-all : netfilter_test
+all : 1m_detect
 
-netfilter_test: main.o
-	g++ -g -o netfilter_test main.o -lnetfilter_queue
+1m_detect: main.o
+	g++ -g -o 1m_detect main.o -lnetfilter_queue
 
 main.o:
 	g++ -g -c -o main.o main.cpp
 
 clean:
-	rm -f netfilter_test
+	rm -f 1m_detect
 	rm -f *.o
 
