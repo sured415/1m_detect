@@ -3,6 +3,7 @@
 #include <regex>					//std::regex
 #include <string>					//std::string
 #include <iostream>
+#include <unordered_set>
 #include <set>
 #include <fstream>
 #include <unistd.h>
@@ -17,10 +18,16 @@
 #include <libnet/libnet-headers.h>
 
 #include <libnetfilter_queue/libnetfilter_queue.h>
-
-using namespace std;
+#include <chrono>
 u_int8_t NF_flag = NF_ACCEPT;
-set<string> ban_list;
+std::unordered_set<std::string> ban_list;
+using namespace std;
+
+typedef std::chrono::high_resolution_clock::time_point Clock;
+
+  typedef std::chrono::high_resolution_clock::duration Diff;
+
+  typedef std::chrono::high_resolution_clock Timer;
 
 static u_int32_t print_pkt (struct nfq_data *tb)
 {
@@ -47,13 +54,13 @@ static u_int32_t print_pkt (struct nfq_data *tb)
 					data += (tcpH->th_off * 4);
 					string s_data, check_host;
 					s_data = (char*) data;
-					regex check("Host: ([^\n]*)");
+					static regex check("Host: ([^\r]*)");
 					smatch host;
 
 					if(regex_search(s_data, host, check)) {
 						check_host = host[1];
-						check_host.erase(check_host.length()-1, 1);
-						set<string>::iterator iter;
+					//	check_host.erase(check_host.length()-1, 1);
+						unordered_set<string>::iterator iter;
 						iter = ban_list.find(check_host);
 						if(iter != ban_list.end()) {
 							NF_flag = NF_DROP;
@@ -96,6 +103,8 @@ int main(int argc, char **argv)
         exit(1);
     }
 
+    Timer timer;
+    Clock start = timer.now();
     ifstream list_file("/root/1m_detect/1m_list.txt");
     string ban;
     while(!list_file.eof()) {
@@ -103,6 +112,8 @@ int main(int argc, char **argv)
 	ban_list.insert(ban);
     }
     list_file.close();
+    Clock end = timer.now();
+    cout << (end - start).count() << endl;
 
     printf("unbinding existing nf_queue handler for AF_INET (if any)\n");
     if (nfq_unbind_pf(h, AF_INET) < 0) {
