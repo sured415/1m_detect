@@ -42,21 +42,23 @@ static u_int32_t print_pkt (struct nfq_data *tb)
 			data += (ipH->ip_hl)*4;
 			struct libnet_tcp_hdr* tcpH = (struct libnet_tcp_hdr *) data;
 			u_int16_t len = (ipH->ip_hl * 4)+(tcpH->th_off * 4);
-			if(ipH->ip_len > len){
-				data += (tcpH->th_off * 4);
-				string s_data, check_host;
-				s_data = (char*) data;
-				regex check("Host: ([^\n]*)");
-				smatch host;
+			if((ntohs(tcpH->th_sport) == 80) || (ntohs(tcpH->th_dport) == 80)){
+				if(ipH->ip_len > len){
+					data += (tcpH->th_off * 4);
+					string s_data, check_host;
+					s_data = (char*) data;
+					regex check("Host: ([^\n]*)");
+					smatch host;
 
-				if(regex_search(s_data, host, check)) {
-					check_host = host[1];
-					check_host.erase(check_host.length()-1, 1);
-					set<string>::iterator iter;
-					iter = ban_list.find(check_host);
-					if(iter != ban_list.end()) {
-						NF_flag = NF_DROP;
-						cout << "host = " << *iter << endl;
+					if(regex_search(s_data, host, check)) {
+						check_host = host[1];
+						check_host.erase(check_host.length()-1, 1);
+						set<string>::iterator iter;
+						iter = ban_list.find(check_host);
+						if(iter != ban_list.end()) {
+							NF_flag = NF_DROP;
+							cout << "host = " << *iter << endl;
+						}
 					}
 				}
 			}
@@ -94,7 +96,7 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    ifstream list_file("/root/netfilter_test/test.txt");
+    ifstream list_file("/root/1m_detect/test.txt");
     string ban;
     while(!list_file.eof()) {
 	getline(list_file, ban);
