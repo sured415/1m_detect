@@ -74,7 +74,7 @@ static int cb(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
     u_int32_t id = print_pkt(nfa);
 
 	if(NF_flag == NF_DROP) printf("***************** block *****************\n");
-    	else printf("entering callback\n");
+//    	else printf("entering callback\n");
 
     	return nfq_set_verdict(qh, id, NF_flag, 0, NULL);
 
@@ -96,7 +96,7 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    ifstream list_file("/root/1m_detect/test.txt");
+    ifstream list_file("/root/1m_detect/1m_list.txt");
     string ban;
     while(!list_file.eof()) {
 	getline(list_file, ban);
@@ -134,7 +134,7 @@ int main(int argc, char **argv)
 
     for (;;) {
         if ((rv = recv(fd, buf, sizeof(buf), 0)) >= 0) {
-            printf("pkt received\n");
+ //           printf("pkt received\n");
             nfq_handle_packet(h, buf, rv);
             continue;
         }
